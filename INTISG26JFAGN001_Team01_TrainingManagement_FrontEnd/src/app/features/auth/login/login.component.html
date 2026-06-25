@@ -1,0 +1,73 @@
+<div class="login-page">
+
+  <div class="login-card">
+    <!-- Left: Illustration -->
+    <div class="login-left">
+      <div class="illustration-wrap">
+        <div class="illus-circle c1"></div>
+        <div class="illus-circle c2"></div>
+        <div class="illus-icon-grid">
+          <div class="illus-icon"><mat-icon>cloud</mat-icon></div>
+          <div class="illus-icon"><mat-icon>lock</mat-icon></div>
+          <div class="illus-icon"><mat-icon>folder</mat-icon></div>
+          <div class="illus-icon accent"><mat-icon>person</mat-icon></div>
+          <div class="illus-icon"><mat-icon>settings</mat-icon></div>
+          <div class="illus-icon"><mat-icon>shield</mat-icon></div>
+        </div>
+        <div class="illus-person">
+          <mat-icon>person_pin</mat-icon>
+        </div>
+      </div>
+      <div class="brand-block">
+        <div class="brand-logo">
+          <mat-icon>school</mat-icon>
+        </div>
+        <h1>SkillSync</h1>
+        <p>Training Management System</p>
+      </div>
+    </div>
+
+    <!-- Right: Form -->
+    <div class="login-right" style="position: relative;">
+      <div>
+      <h2 class="form-title">Login</h2>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="login-form">
+        <div class="input-group">
+          <span class="input-icon"><mat-icon>email</mat-icon></span>
+          <input formControlName="username" type="text" placeholder="Username" class="form-input" autocomplete="username"/>
+        </div>
+        <div class="input-error" *ngIf="(form.get('username')?.touched && form.get('username')?.hasError('required'))">
+          Username is required
+        </div>
+        <div class="input-error" *ngIf="(form.get('username')?.touched && form.get('username')?.hasError('minlength'))">
+          Username must be atleast 3 characters
+        </div>
+
+        <div class="input-group" >
+          <span class="input-icon"><mat-icon>lock</mat-icon></span>
+          <input formControlName="password" [type]="hidePassword ? 'password' : 'text'" placeholder="Password" class="form-input" autocomplete="current-password"/>
+          <button type="button" class="eye-btn" (click)="hidePassword = !hidePassword">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+        </div>
+        <div class="input-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('required')">
+          Password is required
+        </div>
+        <div class="input-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('minlength')">
+          Password must be atleast 4 characters
+        </div>
+
+        <button type="submit" class="login-btn" [ngClass]="{'disabled-btn':loading|| form.invalid}" [disabled]="loading || form.invalid">
+          <mat-spinner diameter="18" *ngIf="loading"></mat-spinner>
+          <span *ngIf="!loading">Get Started</span>
+        </button>
+      </form>
+
+      <!-- <p class="hint-text">Use: <strong>admin</strong> / <strong>pass</strong></p> -->
+      <div class="back-to-home" (click)="redirectToHome()"><mat-icon style="transform: rotate(180deg);">arrow_right</mat-icon>Back To Home</div>
+      </div>
+    </div>
+  </div>
+
+</div>

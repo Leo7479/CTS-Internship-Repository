@@ -1,0 +1,249 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Results</h2>
+      <p>Quiz scores, interview evaluations and project reviews</p>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <ng-container *ngIf="loading">
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading results...</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- Not enrolled -->
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>leaderboard</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>Your results will appear here once you are enrolled in an active batch.</p>
+    </div>
+
+    <ng-container *ngIf="batchId">
+
+      <!-- ── Summary stat row ── -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon s-quiz"><mat-icon>fact_check</mat-icon></div>
+          <div class="stat-body">
+            <div class="stat-value">{{ quizResults.length }}</div>
+            <div class="stat-label">Quizzes Completed</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon s-pass"><mat-icon>trending_up</mat-icon></div>
+          <div class="stat-body">
+            <div class="stat-value">{{ quizPassRate }}%</div>
+            <div class="stat-label">Quiz Pass Rate</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon s-interview"><mat-icon>record_voice_over</mat-icon></div>
+          <div class="stat-body">
+            <div class="stat-value">{{ interviewResults.length }}</div>
+            <div class="stat-label">Interviews Evaluated</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon s-project"><mat-icon>rocket_launch</mat-icon></div>
+          <div class="stat-body">
+            <div class="stat-value">{{ projectResults.length }}</div>
+            <div class="stat-label">Projects Submitted</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tab bar ── -->
+      <div class="tab-bar">
+        <button class="tab-btn" [class.active]="activeTab === 'quizzes'" (click)="selectTab('quizzes')">
+          <mat-icon>fact_check</mat-icon> Quizzes
+          <span class="tab-count" *ngIf="quizResults.length">{{ quizResults.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'interviews'" (click)="selectTab('interviews')">
+          <mat-icon>record_voice_over</mat-icon> Interviews
+          <span class="tab-count" *ngIf="interviewResults.length">{{ interviewResults.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'projects'" (click)="selectTab('projects')">
+          <mat-icon>rocket_launch</mat-icon> Projects
+          <span class="tab-count" *ngIf="projectResults.length">{{ projectResults.length }}</span>
+        </button>
+      </div>
+
+      <!-- ── Quizzes ── -->
+      <ng-container *ngIf="activeTab === 'quizzes'">
+        <div class="empty-tab" *ngIf="quizResults.length === 0">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>No quiz results yet. Attempt quizzes to see your scores here.</p>
+        </div>
+        <div class="result-list" *ngIf="quizResults.length > 0">
+          <div class="result-card card-completed" *ngFor="let q of quizResults">
+            <div class="card-main">
+              <div class="card-left">
+                <div class="type-badge type-completed">Quiz</div>
+                <h3 class="result-title">{{ q.title }}</h3>
+                <div class="iv-meta">
+                  <span class="meta-chip" *ngIf="q.dueDate">
+                    <mat-icon>event</mat-icon>{{ q.dueDate | date:'MMM d, y' }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-right">
+                <div class="score-section">
+                  <div class="score-numbers">
+                    <span class="score-val">{{ q.score }}</span>
+                    <span class="score-max" *ngIf="q.maxScore">/ {{ q.maxScore }}</span>
+                  </div>
+                  <div class="score-bar-bg" *ngIf="q.scorePercent !== null">
+                    <div class="score-bar-fill"
+                         [style.width.%]="q.scorePercent"
+                         [style.background]="getScoreBarColor(q.scorePercent ?? 0)"></div>
+                  </div>
+                  <span class="result-chip" [ngClass]="getResultClass(q.resultStatus)">{{ q.resultStatus }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Interviews ── -->
+      <ng-container *ngIf="activeTab === 'interviews'">
+        <div class="empty-tab" *ngIf="interviewResults.length === 0">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>No interview evaluations yet.</p>
+        </div>
+        <div class="result-list" *ngIf="interviewResults.length > 0">
+          <div class="result-card card-completed" *ngFor="let iv of interviewResults">
+            <div class="card-main">
+              <div class="card-left">
+                <div class="category-badge" [ngClass]="getCategoryClass(iv.category)">
+                  {{ getCategoryLabel(iv.category) }}
+                </div>
+                <h3 class="result-title">{{ iv.title }}</h3>
+                <div class="iv-meta">
+                  <span class="meta-chip">
+                    <mat-icon>event</mat-icon>{{ iv.evaluatedAt | date:'MMM d, y' }}
+                  </span>
+                  <span class="meta-chip">
+                    <mat-icon>person</mat-icon>{{ iv.evaluatorRole }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-right">
+                <div class="score-section">
+                  <div class="score-numbers">
+                    <span class="score-val">{{ iv.totalScore }}</span>
+                    <span class="score-max">/ {{ iv.maxScore }}</span>
+                  </div>
+                  <div class="score-bar-bg" *ngIf="iv.scorePercent !== null">
+                    <div class="score-bar-fill"
+                         [style.width.%]="iv.scorePercent"
+                         [style.background]="getScoreBarColor(iv.scorePercent ?? 0)"></div>
+                  </div>
+                  <span class="result-chip" [ngClass]="getResultClass(iv.resultStatus)">{{ iv.resultStatus }}</span>
+                </div>
+                <button class="expand-btn" (click)="toggleExpand(iv)">
+                  <mat-icon>{{ iv.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Expanded detail -->
+            <div class="detail-section" *ngIf="iv.expanded">
+              <div class="detail-divider"></div>
+              <p class="remarks-row" *ngIf="iv.evaluatorRemarks">
+                <mat-icon>comment</mat-icon>
+                <em>{{ iv.evaluatorRemarks }}</em>
+              </p>
+              <div class="rubric-grid" *ngIf="iv.rubricScores.length > 0">
+                <div class="rubric-item" *ngFor="let r of iv.rubricScores">
+                  <span class="rubric-criteria">{{ r.criteria }}</span>
+                  <div class="rubric-right">
+                    <span class="rubric-score">{{ r.scoreAwarded }}<span class="rubric-max"> / {{ r.weight }}</span></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ── Projects ── -->
+      <ng-container *ngIf="activeTab === 'projects'">
+        <div class="empty-tab" *ngIf="projectResults.length === 0">
+          <mat-icon>hourglass_empty</mat-icon>
+          <p>No projects submitted yet.</p>
+        </div>
+        <div class="result-list" *ngIf="projectResults.length > 0">
+          <div class="result-card" [class.card-completed]="p.reviews.length > 0" *ngFor="let p of projectResults">
+            <div class="card-main">
+              <div class="card-left">
+                <div class="type-badge" [ngClass]="p.reviews.length > 0 ? 'type-completed' : 'type-upcoming'">
+                  {{ p.reviews.length > 0 ? 'Reviewed' : 'Submitted' }}
+                </div>
+                <h3 class="result-title">{{ p.title }}</h3>
+                <div class="iv-meta">
+                  <span class="meta-chip" *ngIf="p.submissionDate">
+                    <mat-icon>event</mat-icon>{{ p.submissionDate | date:'MMM d, y' }}
+                  </span>
+                  <span class="meta-chip">
+                    <mat-icon>rate_review</mat-icon>{{ p.reviews.length }} review{{ p.reviews.length !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+              <div class="card-right">
+                <div class="score-section" *ngIf="p.avgScore !== null">
+                  <div class="score-numbers">
+                    <span class="score-val">{{ p.avgScore }}</span>
+                    <span class="score-max">avg</span>
+                  </div>
+                </div>
+                <div class="state-badge state-pending" *ngIf="p.reviews.length === 0">
+                  <mat-icon>schedule</mat-icon> Awaiting Review
+                </div>
+                <div class="card-actions">
+                  <a [href]="p.repoUrl" target="_blank" class="repo-btn" *ngIf="p.repoUrl">
+                    <mat-icon>open_in_new</mat-icon>
+                  </a>
+                  <button class="expand-btn" (click)="toggleExpand(p)" *ngIf="p.reviews.length > 0">
+                    <mat-icon>{{ p.expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Expanded reviews -->
+            <div class="detail-section" *ngIf="p.expanded && p.reviews.length > 0">
+              <div class="detail-divider"></div>
+              <div class="review-list">
+                <div class="review-item" *ngFor="let r of p.reviews">
+                  <div class="review-header">
+                    <span class="review-type-chip">{{ r.type }}</span>
+                    <span class="review-score">Score: <strong>{{ r.score }}</strong></span>
+                  </div>
+                  <p class="review-comment" *ngIf="r.comments">{{ r.comments }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- Global empty state — only shown before tab selection reveals a per-tab message -->
+      <div class="empty-state"
+           *ngIf="quizResults.length === 0 && interviewResults.length === 0 && projectResults.length === 0 && activeTab === 'quizzes'">
+        <mat-icon>hourglass_empty</mat-icon>
+        <h3>No Results Yet</h3>
+        <p>Your quiz scores, interview evaluations, and project reviews will appear here as they become available.</p>
+      </div>
+
+    </ng-container>
+
+  </ng-container>
+
+</div>

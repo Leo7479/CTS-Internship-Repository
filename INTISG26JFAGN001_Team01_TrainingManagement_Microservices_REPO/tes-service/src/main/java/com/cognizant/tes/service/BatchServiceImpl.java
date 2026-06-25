@@ -1,0 +1,140 @@
+package com.cognizant.tes.service;
+
+import com.cognizant.tes.dao.IBatchDAO;
+import com.cognizant.tes.dao.ICourseBatchMapDAO;
+import com.cognizant.tes.dto.BatchDetailsDTO;
+import com.cognizant.tes.dto.CourseResponseDTO;
+import com.cognizant.tes.entity.Batch;
+import com.cognizant.tes.entity.BatchStatus;
+import com.cognizant.tes.entity.CourseBatchMap;
+import com.cognizant.tes.entity.Trainer;
+import com.cognizant.tes.exception.InvalidArgumentException;
+import com.cognizant.tes.exception.InvalidBatchException;
+import com.cognizant.tes.client.ICourseServiceClient;
+import com.cognizant.tes.mapper.BatchMapper;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+@Service
+@Transactional
+public class BatchServiceImpl implements IBatchService {
+
+    private final IBatchDAO batchDAO;
+    private final ICourseBatchMapDAO courseBatchMapDAO;
+    private final ICourseServiceClient courseServiceClient;
+    private final ITrainerService trainerService;
+
+    public BatchServiceImpl(IBatchDAO batchDAO, ICourseBatchMapDAO courseBatchMapDAO,
+                            ICourseServiceClient courseServiceClient,ITrainerService trainerService) {
+        this.batchDAO = batchDAO;
+        this.courseBatchMapDAO = courseBatchMapDAO;
+        this.courseServiceClient = courseServiceClient;
+        this.trainerService = trainerService;
+    }
+    public List<Batch> getAllBatches() {
+        return batchDAO.findAll();
+    }
+
+    public Batch addBatch(BatchDetailsDTO batchDTO) {
+
+        Batch batch = BatchMapper.toEntity(batchDTO);
+
+
+        List<Long> courseIds = batchDTO.getCourseIds();
+
+        List<CourseResponseDTO> courses = courseIds.stream()
+                .map(courseServiceClient::getCourseById)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (courses.size() != courseIds.size()) {
+            throw new InvalidBatchException("One or more course IDs are invalid");
+        }
+
+        Long trainerId = batchDTO.getTrainerId();
+        Trainer trainer = trainerService.getTrainerById(trainerId);
+        if (trainer == null) {
+            throw new InvalidBatchException("Invalid Trainer Id: " + trainerId);
+        }
+
+        Batch savedBatch = batchDAO.save(batch);
+
+
+        for (Long courseId : courseIds) {
+            CourseBatchMap mapping = new CourseBatchMap();
+            mapping.setBatchId(savedBatch.getBatchId());
+            mapping.setCourseId(courseId);
+            courseBatchMapDAO.save(mapping);
+        }
+
+        return savedBatch;
+    }
+
+    public Batch getBatchById(Long batchId) throws InvalidBatchException {
+        if (batchId < 0) {
+            throw new InvalidArgumentException("Batch ID must be non-negative");
+        }
+        return batchDAO.findById(batchId);
+    }
+
+    public Batch deleteBatch(Long batchId) {
+        if (batchId < 0) {
+            throw new InvalidArgumentException("Batch ID must be non-negative");
+        }
+        return batchDAO.deleteById(batchId);
+    }
+
+    public List<Batch> getBatchesByStatus(BatchStatus status) {
+        return batchDAO.findByStatus(status);
+    }
+
+    public Batch updateStatusById(Long batchId, BatchStatus status) throws InvalidBatchException {
+        Batch batch = batchDAO.findById(batchId);
+        batch.setStatus(status);
+        return batchDAO.save(batch);
+    }
+
+    public List<Batch> getBatchesByCourseId(Long courseId) {
+        if (courseId < 0) {
+            throw new InvalidArgumentException("Trainer ID must be non-negative");
+        }
+        return batchDAO.findByCourseId(courseId);
+    }
+
+    public List<CourseResponseDTO> getCoursesForBatch(Long batchId) {
+        if (batchId < 0) {
+            throw new InvalidArgumentException("Course ID must be non-negative");
+        }
+        Batch batch = batchDAO.findById(batchId);
+        if (batch == null) {
+            throw new InvalidBatchException("Batch with id=" + batchId + " not found");
+        }
+        List<Long> courseIds = courseBatchMapDAO.findCourseIdsByBatchId(batchId);
+
+        return courseIds.stream()
+                .map(courseServiceClient::getCourseById)
+                .collect(Collectors.toList());
+    }
+
+
+    public List<Batch> getBatchByTrainerId(Long trainerId) {
+        if (trainerId < 0) {
+            throw new InvalidArgumentException("Course ID must be non-negative");
+        }
+        return batchDAO.findByTrainerId(trainerId);
+    }
+
+    public Batch getBatchDetailsById(Long id) {
+        if (id < 0) {
+            throw new InvalidArgumentException("Batch ID must be non-negative");
+        }
+        return batchDAO.findById(id);
+    }
+
+
+}

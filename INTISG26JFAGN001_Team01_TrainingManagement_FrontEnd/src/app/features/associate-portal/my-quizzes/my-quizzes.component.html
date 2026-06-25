@@ -1,0 +1,132 @@
+<div class="page-container">
+
+  <div class="page-header">
+    <div class="header-info">
+      <h2>My Quizzes</h2>
+      <p>View and attempt quizzes assigned to your batch</p>
+    </div>
+    <div class="header-stat" *ngIf="upcoming.length > 0">
+      <mat-icon>pending_actions</mat-icon>
+      <span>{{ upcoming.length }} upcoming</span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <ng-container *ngIf="loading">
+    <div class="loading-center">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Loading quizzes...</p>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!loading">
+
+    <!-- Not enrolled -->
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You are not currently enrolled in an active batch. Quizzes will appear here once you are assigned to a batch.</p>
+    </div>
+
+    <!-- No quizzes at all -->
+    <div *ngIf="batchId && quizzes.length === 0" class="empty-state">
+      <mat-icon>fact_check</mat-icon>
+      <h3>No Quizzes Yet</h3>
+      <p>Your trainer hasn't published any quizzes yet. Check back later.</p>
+    </div>
+
+    <!-- Tabs + content -->
+    <ng-container *ngIf="batchId && quizzes.length > 0">
+
+      <!-- Tab bar -->
+      <div class="tab-bar">
+        <button class="tab-btn" [class.active]="activeTab === 'upcoming'" (click)="selectTab('upcoming')">
+          <mat-icon>upcoming</mat-icon> Upcoming
+          <span class="tab-count" *ngIf="upcoming.length">{{ upcoming.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'completed'" (click)="selectTab('completed')">
+          <mat-icon>check_circle</mat-icon> Completed
+          <span class="tab-count" *ngIf="completed.length">{{ completed.length }}</span>
+        </button>
+        <button class="tab-btn" [class.active]="activeTab === 'missed'" (click)="selectTab('missed')">
+          <mat-icon>cancel</mat-icon> Missed
+          <span class="tab-count warn" *ngIf="missed.length">{{ missed.length }}</span>
+        </button>
+      </div>
+
+      <!-- Empty tab state -->
+      <div class="empty-tab" *ngIf="filteredQuizzes.length === 0">
+        <mat-icon>{{ activeTab === 'upcoming' ? 'hourglass_empty' : activeTab === 'completed' ? 'done_all' : 'event_busy' }}</mat-icon>
+        <p *ngIf="activeTab === 'upcoming'">No upcoming quizzes. Stay tuned!</p>
+        <p *ngIf="activeTab === 'completed'">You haven't attempted any quizzes yet.</p>
+        <p *ngIf="activeTab === 'missed'">Great — no missed quizzes.</p>
+      </div>
+
+      <!-- Quiz list -->
+      <div class="quiz-list" *ngIf="filteredQuizzes.length > 0">
+        <div class="quiz-card"
+             *ngFor="let q of filteredQuizzes"
+             [class.card-completed]="q.attempted"
+             [class.card-missed]="!q.attempted && activeTab === 'missed'">
+
+          <div class="card-left">
+            <div class="type-badge"
+                 [ngClass]="activeTab === 'completed' ? 'type-completed' : activeTab === 'missed' ? 'type-missed' : 'type-upcoming'">
+              {{ activeTab === 'completed' ? 'Completed' : activeTab === 'missed' ? 'Missed' : 'Upcoming' }}
+            </div>
+            <h3 class="quiz-title">{{ q.title }}</h3>
+            <div class="iv-meta">
+              <span class="meta-chip">
+                <mat-icon>event</mat-icon>{{ q.dueDate ? (q.dueDate | date:'MMM d, y') : 'No deadline' }}
+              </span>
+              <span class="meta-chip">
+                <mat-icon>timer</mat-icon>{{ q.durationMinutes ?? 30 }} min
+              </span>
+            </div>
+          </div>
+
+          <div class="card-right">
+
+            <!-- Upcoming: Take Quiz button -->
+            <ng-container *ngIf="activeTab === 'upcoming'">
+              <button class="action-btn btn-primary" (click)="openQuiz(q)">
+                <mat-icon>play_arrow</mat-icon> Take Quiz
+              </button>
+            </ng-container>
+
+            <!-- Missed -->
+            <ng-container *ngIf="activeTab === 'missed'">
+              <div class="state-badge state-missed">
+                <mat-icon>cancel</mat-icon> Missed
+              </div>
+            </ng-container>
+
+            <!-- Completed: Score -->
+            <ng-container *ngIf="activeTab === 'completed' && q.attempted">
+              <div class="score-section">
+                <div class="score-numbers">
+                  <span class="score-val">{{ q.score ?? 0 }}</span>
+                  <span class="score-max" *ngIf="q.maxScore">/ {{ q.maxScore }}</span>
+                </div>
+                <div class="score-bar-bg" *ngIf="q.scorePercent !== null && q.scorePercent !== undefined">
+                  <div class="score-bar-fill"
+                       [style.width.%]="q.scorePercent"
+                       [style.background]="getScoreBarColor(q.scorePercent ?? 0)"></div>
+                </div>
+                <span class="result-chip"
+                      [ngClass]="q.resultStatus === 'PASS' ? 'chip-pass' : 'chip-fail'"
+                      *ngIf="q.resultStatus">
+                  {{ q.resultStatus }}
+                </span>
+              </div>
+            </ng-container>
+
+          </div>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </ng-container>
+
+</div>

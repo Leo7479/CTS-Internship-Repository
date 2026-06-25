@@ -1,0 +1,79 @@
+package com.cognizant.tes.dto;
+
+import com.cognizant.tes.entity.BatchStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.NotEmpty;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class BatchDetailsDTO {
+    private Long id;
+    private Long trainerId;
+    private BatchStatus status;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime startDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    private LocalDateTime endDate;
+    @NotEmpty(message = "Course IDs must be provided")
+    private List<Long> courseIds;
+    private List<String> courseNames;
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getTrainerId() {
+        return trainerId;
+    }
+
+    public void setTrainerId(Long trainerId) {
+        this.trainerId = trainerId;
+    }
+
+    public BatchStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BatchStatus status) {
+        this.status = status;
+    }
+
+    public LocalDateTime getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDateTime startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDateTime getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDateTime endDate) {
+        this.endDate = endDate;
+    }
+
+    public List<Long> getCourseIds() {
+        return courseIds;
+    }
+
+    public void setCourseIds(List<Long> courseIds) {
+        this.courseIds = courseIds;
+    }
+
+    public List<String> getCourseNames() {
+        return courseNames;
+    }
+
+    public void setCourseNames(List<String> courseNames) {
+        this.courseNames = courseNames;
+    }
+}

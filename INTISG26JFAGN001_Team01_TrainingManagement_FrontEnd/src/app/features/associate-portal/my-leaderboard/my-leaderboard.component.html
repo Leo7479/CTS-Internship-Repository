@@ -1,0 +1,108 @@
+<div class="page-container">
+  <div class="page-header">
+    <div class="header-info">
+      <h2><mat-icon>emoji_events</mat-icon> Batch Leaderboard</h2>
+      <p>See how you rank against your batchmates</p>
+    </div>
+  </div>
+
+  <div *ngIf="!loading; else loadingTpl">
+
+    <!-- Not enrolled -->
+    <div *ngIf="!batchId" class="empty-state">
+      <mat-icon>groups</mat-icon>
+      <h3>No Active Batch</h3>
+      <p>You need to be enrolled in a batch to view the leaderboard.</p>
+    </div>
+
+    <ng-container *ngIf="batchId">
+
+      <!-- No data -->
+      <div *ngIf="entries.length === 0" class="empty-state">
+        <mat-icon>hourglass_empty</mat-icon>
+        <h3>No Data Yet</h3>
+        <p>XP will appear here once your batch gets started.</p>
+      </div>
+
+      <ng-container *ngIf="entries.length > 0">
+
+        <!-- ── Podium (top 3) ── -->
+        <div class="podium" *ngIf="entries.length >= 2">
+          <!-- 2nd -->
+          <div class="podium-slot silver">
+            <div class="podium-avatar" [class.me]="entries[1].isCurrentUser">
+              {{ getInitials(entries[1].fullName) }}
+            </div>
+            <p class="podium-name">{{ entries[1].fullName }}</p>
+            <p class="podium-xp">{{ entries[1].xp }} XP</p>
+            <div class="podium-block silver-block">2</div>
+          </div>
+          <!-- 1st -->
+          <div class="podium-slot gold">
+            <mat-icon class="crown">emoji_events</mat-icon>
+            <div class="podium-avatar large" [class.me]="entries[0].isCurrentUser">
+              {{ getInitials(entries[0].fullName) }}
+            </div>
+            <p class="podium-name">{{ entries[0].fullName }}</p>
+            <p class="podium-xp">{{ entries[0].xp }} XP</p>
+            <div class="podium-block gold-block">1</div>
+          </div>
+          <!-- 3rd -->
+          <div class="podium-slot bronze" *ngIf="entries[2]">
+            <div class="podium-avatar" [class.me]="entries[2].isCurrentUser">
+              {{ getInitials(entries[2].fullName) }}
+            </div>
+            <p class="podium-name">{{ entries[2].fullName }}</p>
+            <p class="podium-xp">{{ entries[2].xp }} XP</p>
+            <div class="podium-block bronze-block">3</div>
+          </div>
+        </div>
+
+        <!-- ── Rankings list ── -->
+        <div class="rankings-card">
+          <div class="rankings-header">
+            <mat-icon>format_list_numbered</mat-icon>
+            <span>Full Rankings</span>
+            <span class="batch-chip">Batch #{{ batchId }}</span>
+          </div>
+
+          <div class="ranking-row" *ngFor="let e of entries" [class.highlight-row]="e.isCurrentUser">
+            <!-- Rank -->
+            <div class="rank-col">
+              <mat-icon *ngIf="getMedalIcon(e.rank)" [class]="getMedalClass(e.rank)">{{ getMedalIcon(e.rank) }}</mat-icon>
+              <span *ngIf="!getMedalIcon(e.rank)" class="rank-num">{{ e.rank }}</span>
+            </div>
+
+            <!-- Associate -->
+            <div class="associate-col">
+              <div class="avatar-sm" [class.avatar-me]="e.isCurrentUser">{{ getInitials(e.fullName) }}</div>
+              <div class="associate-info">
+                <span class="associate-name">
+                  {{ e.fullName }}
+                  <span class="you-badge" *ngIf="e.isCurrentUser">You</span>
+                </span>
+                <span class="associate-email">{{ e.email }}</span>
+              </div>
+            </div>
+
+            <!-- XP bar + value -->
+            <div class="xp-col">
+              <div class="xp-bar-wrap">
+                <div class="xp-bar-fill" [style.width.%]="getXpBarPct(e.xp)"></div>
+              </div>
+              <span class="xp-value">{{ e.xp }} <span class="xp-label">XP</span></span>
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+    </ng-container>
+  </div>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-center">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading leaderboard...</p>
+  </div>
+</ng-template>
